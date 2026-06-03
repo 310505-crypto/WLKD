@@ -1,0 +1,844 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>韓舞社社課學習回饋與研究管理系統</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f8fafc; /* Slate 50 */
+        }
+        .focus-lavender:focus {
+            outline: none;
+            border-color: #c084fc;
+            box-shadow: 0 0 0 3px rgba(192, 132, 252, 0.15);
+        }
+        .bg-lavender-light {
+            background-color: #f5f3ff; /* Lavender 50 */
+        }
+        .text-lavender-dark {
+            color: #6b21a8;
+        }
+        .border-lavender-subtle {
+            border-color: #ddd6fe;
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <!-- Top Accent Line -->
+    <div class="h-1.5 w-full bg-purple-300"></div>
+
+    <!-- Toast Notification Container (Custom Alert replacement) -->
+    <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white border border-slate-850 text-xs py-2.5 px-5 rounded-xl shadow-lg transform translate-y-[-20px] opacity-0 pointer-events-none transition-all duration-300 flex items-center gap-2">
+        <i id="toastIcon" class="fa-solid fa-circle-info text-purple-400"></i>
+        <span id="toastMsg">提示訊息</span>
+    </div>
+
+    <!-- Custom Confirmation Modal (Custom Confirm replacement) -->
+    <div id="confirmModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200">
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 max-w-sm w-full shadow-xl transform scale-95 transition-transform duration-250">
+            <h4 class="text-base font-bold text-slate-950 mb-2" id="confirmTitle">確認執行此操作？</h4>
+            <p class="text-xs text-slate-500 leading-relaxed mb-6" id="confirmDesc">此動作將無法復原，請確認是否繼續。</p>
+            <div class="flex justify-end gap-2 text-xs font-semibold">
+                <button type="button" onclick="closeConfirmModal(false)" class="bg-slate-100 hover:bg-slate-200 text-slate-600 py-2 px-4 rounded-lg transition-colors">取消</button>
+                <button type="button" id="confirmExecuteBtn" class="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition-colors">確認</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="container mx-auto px-4 py-8 max-w-3xl flex-grow">
+        
+        <!-- Admin Floating Controls (Visible only after unlocking) -->
+        <div id="adminBadge" class="hidden mb-6 bg-purple-50 border border-purple-200 text-purple-700 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+            <div class="flex items-center space-x-2">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-purple-600"></span>
+                </span>
+                <span class="text-sm font-bold"><i class="fa-solid fa-user-gear mr-1"></i> 編輯管理員模式已啟用</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button type="button" onclick="addNewQuestionPrompt()" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
+                    <i class="fa-solid fa-plus mr-1"></i> 新增題目
+                </button>
+                <button type="button" onclick="loadMockData()" class="bg-white border border-purple-200 hover:bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
+                    <i class="fa-solid fa-database mr-1"></i> 載入模擬數據
+                </button>
+                <button type="button" onclick="triggerClearData()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
+                    <i class="fa-solid fa-trash-can mr-1"></i> 重設數據
+                </button>
+                <button type="button" onclick="lockAdminMode()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
+                    <i class="fa-solid fa-lock mr-1"></i> 鎖定並儲存
+                </button>
+            </div>
+        </div>
+
+        <!-- Header Section -->
+        <header class="text-center mb-10 mt-4">
+            <h1 id="surveyTitle" class="text-3xl font-extrabold text-slate-900 tracking-tight" contenteditable="false">
+                韓舞社社課學習回饋表單
+            </h1>
+            <p id="surveySubtitle" class="text-slate-500 mt-3 text-sm md:text-base leading-relaxed max-w-lg mx-auto" contenteditable="false">
+                親愛的小孩們，謝謝你們每次社課都這麼配合！這是一份結合新教學嘗試的回饋表單，你們的真實感受對我非常重要，請幫我花 3 分鐘填寫唷 ❤️
+            </p>
+            <div id="editHeaderTip" class="hidden text-xs text-purple-500 mt-1.5"><i class="fa-solid fa-pen-to-square mr-1"></i> 點選上述標題與副標題可直接修改</div>
+        </header>
+
+        <!-- Dynamic Form Container -->
+        <form id="surveyForm" class="space-y-8" onsubmit="handleFormSubmit(event)">
+            
+            <div id="dynamicSectionsContainer" class="space-y-6">
+                <!-- Sections will be rendered here dynamically via JavaScript -->
+            </div>
+
+            <!-- Heartwarming Message Board -->
+            <section class="bg-lavender-light border border-lavender-subtle rounded-2xl p-6 shadow-sm">
+                <h3 class="text-base font-bold text-purple-900 mb-2 flex items-center gap-1.5">
+                    <span>💌</span> <span id="heartMsgTitle" contenteditable="false">來自教學的心裡話</span>
+                </h3>
+                <div id="heartMsgContent" class="text-purple-850 text-xs md:text-sm space-y-3 leading-relaxed whitespace-pre-wrap" contenteditable="false">謝謝寶貝們每次社課都這麼挺我、這麼配合！特別是願意花時間幫我填寫這份表單（大心）❤️。
+
+這次教學是我第一次嘗試將「傳統街舞的基底」融入 K-pop 教學中，希望除了排舞，也能帶給你們帶得走的舞蹈觀念，讓大家未來跳舞都能派上用場！希望這個新嘗試沒有讓你們大腦過載大爆炸👀。
+
+跳舞是一件讓人最純粹、最開心的事情，大成大合舞我們一起加油，愛大家耶耶耶！</div>
+                <div id="editHeartMsgTip" class="hidden text-xs text-purple-400 mt-2"><i class="fa-solid fa-pen-to-square mr-1"></i> 點選文字框可直接編輯心裡話</div>
+            </section>
+
+            <!-- Submit Button -->
+            <div class="text-center pt-4 pb-8 border-b border-slate-200">
+                <button 
+                    type="submit" 
+                    id="submitBtn"
+                    class="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-semibold px-10 py-3.5 rounded-xl shadow-sm hover:shadow transition-all duration-150 cursor-pointer text-sm"
+                >
+                    提交學習回饋表單 ✨
+                </button>
+            </div>
+        </form>
+
+        <!-- HIDDEN GATEWAY FOR RESEARCHER / ADMIN -->
+        <div class="mt-8 text-center">
+            <button 
+                type="button"
+                id="adminGateBtn"
+                onclick="showAdminPasswordPrompt()" 
+                class="text-xs text-slate-400 hover:text-purple-500 transition-colors duration-150 underline decoration-dotted"
+            >
+                <i class="fa-solid fa-lock-open mr-1"></i> 管理端控制與數據統計入口
+            </button>
+            
+            <!-- Password Verification Container (Hints removed for absolute secrecy) -->
+            <div id="passwordFieldContainer" class="hidden mt-3 max-w-xs mx-auto p-4 bg-white border border-slate-200 rounded-xl shadow-sm">
+                <label class="block text-xs font-semibold text-slate-500 mb-2">輸入研究者專屬查看密碼：</label>
+                <div class="flex gap-2">
+                    <input 
+                        type="password" 
+                        id="adminPasswordInput" 
+                        placeholder="請輸入密碼..." 
+                        class="flex-grow bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus-lavender"
+                    />
+                    <button 
+                        type="button"
+                        onclick="verifyPassword()" 
+                        class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+                    >
+                        驗證
+                    </button>
+                </div>
+                <!-- Inline Error Alert inside control panel -->
+                <p id="passwordErrorMsg" class="hidden text-[10px] text-rose-500 mt-1.5 text-left font-medium">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> 密碼驗證失敗，請重新輸入。
+                </p>
+            </div>
+        </div>
+
+        <!-- STATISTICS DASHBOARD -->
+        <section id="adminDashboard" class="hidden mt-8 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm transition-all duration-300">
+            <div class="flex items-center justify-between mb-6 border-b border-slate-100 pb-3">
+                <div class="flex items-center space-x-2.5">
+                    <span class="text-purple-600 text-lg"><i class="fa-solid fa-chart-column"></i></span>
+                    <h2 class="text-lg font-bold text-slate-900">即時回饋統計結果 (研究者後台)</h2>
+                </div>
+                <div class="bg-purple-100 text-purple-700 font-bold text-xs px-2.5 py-1 rounded-full">
+                    已有 <span id="respondentCount">0</span> 人填答
+                </div>
+            </div>
+
+            <!-- Quantitative Stats (Charts) -->
+            <div class="space-y-5">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">量化統計平均分數 (李克特 5 點量表)</h3>
+                
+                <div id="statsBarsContainer" class="space-y-4">
+                    <!-- Progress bars will be injected here dynamically -->
+                </div>
+            </div>
+
+            <!-- Qualitative Feedback (Text wall) -->
+            <div class="mt-8">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">社員開放意見牆</h3>
+                <div id="feedbackWall" class="space-y-3 max-h-60 overflow-y-auto pr-1">
+                    <!-- Submitted text responses will dynamically stack here -->
+                </div>
+            </div>
+            
+            <!-- Hide Dashboard Button -->
+            <div class="mt-6 text-center">
+                <button 
+                    type="button"
+                    onclick="lockAdminMode()" 
+                    class="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs px-4 py-2 rounded-lg transition-colors"
+                >
+                    <i class="fa-solid fa-lock mr-1"></i> 關閉並上鎖後台
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- SUCCESS NOTIFICATION DIALOG -->
+    <div id="successModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 max-w-sm w-full text-center shadow-xl transform scale-95 transition-transform duration-300">
+            <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-check text-xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-950 mb-1">送出成功！✨</h3>
+            <p class="text-sm text-slate-500 leading-relaxed mb-6">
+                謝謝你的回饋，大成加油！❤️
+            </p>
+            <button 
+                onclick="closeModal()" 
+                class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors cursor-pointer text-sm"
+            >
+                完成
+            </button>
+        </div>
+    </div>
+
+    <!-- Simple Footer -->
+    <footer class="py-6 text-center text-xs text-slate-400 mt-12 bg-white border-t border-slate-100">
+        <p>韓舞社社課學習成效檢驗問卷設計</p>
+    </footer>
+
+    <!-- JavaScript - Implements full CRUD question state and data pipeline -->
+    <script>
+        const ADMIN_PASSWORD = "115dance";
+        let isAdmin = false;
+        let confirmCallback = null;
+
+        // Structured initial State representing the physical survey structure
+        let surveyStructure = [
+            {
+                id: "sec_1",
+                title: "第一部分：暖身環節",
+                scenario: "教學邀請第一排社員隨機挑選一首 K-pop 歌曲進行暖身，並在過程中詳細說明暖身動作的標準、功能與拍子分配（例如：演示轉頭時如何將 8 拍平均分配）。",
+                questions: [
+                    { id: "p1_q1", type: "likert", text: "課堂中「利用音樂數拍並拆解拍子（如 8 拍平均分配）」的講解，有助於我更具體地掌握動作的節奏感。" },
+                    { id: "p1_q2", type: "likert", text: "暖身環節中對動作標準與功能的說明，提升了我對「暖身能預防運動傷害與啟動肌肉」的認知。" },
+                    { id: "p1_q3", type: "text", text: "【開放意見】在暖身環節中，有沒有哪個瞬間或教學方式讓你印象最深刻？或是有什麼調整建議？" }
+                ]
+            },
+            {
+                id: "sec_2",
+                title: "第二部分：舞蹈元素組合與大合舞教學",
+                scenario: "教學先講解了 4-5 組舞蹈基本元素（如：馬步蹲的轉胯幅度、重心置中等），搭配音樂演示數拍。隨後進入大合舞教學，拆解動作細節（發力方向、腳步踩點、軀幹朝向等），並融入了前面學到的基礎元素。",
+                questions: [
+                    { id: "p2_q1", type: "likert", text: "先學習「舞蹈基本元素組合（如馬步蹲轉胯）」，能有效幫助我在隨後的大合舞環節中更快上手、降低學習挫折感。" },
+                    { id: "p2_q2", type: "likert", text: "透過基礎元素的拆解，讓我理解到 K-pop 舞蹈是由許多不同的基本元素組合而成，有助於建立我的舞蹈觀念。" },
+                    { id: "p2_q3", type: "text", text: "【開放意見】關於「基礎元素 ➔ 實戰排舞」的銜接教學，你有什麼心得或想法嗎？" }
+                ]
+            },
+            {
+                id: "sec_3",
+                title: "第三部分：隊形走位與分組對拍",
+                scenario: "課堂中利用動態走位影片並分配每位社員編號；在需要分組對拍的部分將大家分為三排，以每排為一組教學各自的拍子（例如：第一排、第二排、第三排在不同的「嗚」聲做動作）。",
+                questions: [
+                    { id: "p3_q1", type: "likert", text: "透過「動態走位影片分配編號」與「分排/分組針對特定拍子教學」，能讓我更清楚自己負責的段落，降低學習時的混亂感。" }
+                ]
+            },
+            {
+                id: "sec_4",
+                title: "第四部分：實際學習感受",
+                scenario: "此部分用於宏觀評估，包含教學清晰度及難易度掌控。",
+                questions: [
+                    { id: "p4_q1", type: "likert", text: "教學在解釋動作細節（如發力方向、手腳位置）時，使用的說明方式 or 比喻是清晰且容易理解的。" },
+                    { id: "p4_q2", type: "likert", text: "本次社課的進度推移與動作強度，對我而言能保持在「有挑戰性但不會過度焦慮或吃力」的適中狀態。" },
+                    { id: "p4_q3", type: "text", text: "【開放意見】這次社課有沒有讓你覺得最挫折，或是最驚喜、很有成就感的地方？" }
+                ]
+            }
+        ];
+
+        // Active State of Answers Database (In-Memory)
+        let statistics = {
+            count: 0,
+            answers: [] // Array of submitted form objects
+        };
+
+        // Preset 12 mock rows for instant dashboard render
+        const initialMockAnswers = [
+            { p1_q1: 5, p1_q2: 5, p1_q3: "老師轉脖子的拍子說明好詳細，第一次跟得上！", p2_q1: 4, p2_q2: 5, p2_q3: "馬步蹲對排舞發力真的有幫助", p3_q1: 4, p4_q1: 5, p4_q2: 4, p4_q3: "排舞能連起來很有成就感" },
+            { p1_q1: 4, p1_q2: 5, p1_q3: "", p2_q1: 5, p2_q2: 4, p2_q3: "銜接的很讚！", p3_q1: 5, p4_q1: 5, p4_q2: 4, p4_q3: "走位不再怕找不到方向了" },
+            { p1_q1: 5, p1_q2: 4, p1_q3: "隨機音樂暖身很嗨", p2_q1: 4, p2_q2: 5, p2_q3: "", p3_q1: 4, p4_q1: 4, p4_q2: 3, p4_q3: "拍子太快有點挫折但很好玩" },
+            { p1_q1: 4, p1_q2: 4, p1_q3: "", p2_q1: 4, p2_q2: 4, p2_q3: "", p3_q1: 4, p4_q1: 5, p4_q2: 4, p4_q3: "" },
+            { p1_q1: 3, p1_q2: 5, p1_q3: "了解預防受傷的用意", p2_q1: 3, p2_q2: 4, p2_q3: "前面的馬步蹲稍微累了點", p3_q1: 3, p4_q1: 4, p4_q2: 5, p4_q3: "" },
+            { p1_q1: 5, p1_q2: 5, p1_q3: "", p2_q1: 5, p2_q2: 5, p2_q3: "動作系統化拆解對初學者非常有善", p3_q1: 5, p4_q1: 5, p4_q2: 4, p4_q3: "整堂課都很有成就感" },
+            { p1_q1: 4, p1_q2: 4, p1_q3: "", p2_q1: 4, p2_q2: 4, p2_q3: "", p3_q1: 5, p4_q1: 4, p4_q2: 4, p4_q3: "" },
+            { p1_q1: 5, p1_q2: 5, p1_q3: "喜歡節奏點拆解", p2_q1: 4, p2_q2: 5, p2_q3: "", p3_q1: 4, p4_q1: 5, p4_q2: 4, p4_q3: "" },
+            { p1_q1: 4, p1_q2: 4, p1_q3: "", p2_q1: 5, p2_q2: 4, p2_q3: "", p3_q1: 4, p4_q1: 4, p4_q2: 4, p4_q3: "" },
+            { p1_q1: 5, p1_q2: 5, p1_q3: "", p2_q1: 4, p2_q2: 5, p2_q3: "希望下次還能有類似的基礎引導", p3_q1: 5, p4_q1: 5, p4_q2: 5, p4_q3: "大成一定順利" },
+            { p1_q1: 4, p1_q2: 5, p1_q3: "暖身詳細度很夠", p2_q1: 4, p2_q2: 4, p2_q3: "", p3_q1: 4, p4_q1: 4, p4_q2: 4, p4_q3: "" },
+            { p1_q1: 5, p1_q2: 5, p1_q3: "", p2_q1: 5, p2_q2: 5, p2_q3: "給編號直接拯救我的隊形定位", p3_q1: 5, p4_q1: 5, p4_q2: 4, p4_q3: "今天強度剛剛好" }
+        ];
+
+        // Toast Helper (Replaces traditional Alert)
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+            
+            toastMsg.innerText = msg;
+            if (isError) {
+                toast.classList.remove('bg-slate-900', 'text-white', 'border-slate-850');
+                toast.classList.add('bg-rose-50', 'text-rose-800', 'border-rose-200');
+                toastIcon.className = "fa-solid fa-triangle-exclamation text-rose-500";
+            } else {
+                toast.classList.remove('bg-rose-50', 'text-rose-800', 'border-rose-200');
+                toast.classList.add('bg-slate-900', 'text-white', 'border-slate-850');
+                toastIcon.className = "fa-solid fa-circle-check text-purple-400";
+            }
+
+            toast.classList.remove('translate-y-[-20px]', 'opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('translate-y-[-20px]', 'opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+
+        // Custom Confirm Dialog (Replaces confirm())
+        function openConfirmModal(title, desc, callback) {
+            document.getElementById('confirmTitle').innerText = title;
+            document.getElementById('confirmDesc').innerText = desc;
+            confirmCallback = callback;
+
+            const modal = document.getElementById('confirmModal');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modal.querySelector('div').classList.remove('scale-95');
+            modal.querySelector('div').classList.add('scale-100');
+            
+            // Set execution listener once
+            const executeBtn = document.getElementById('confirmExecuteBtn');
+            executeBtn.onclick = () => {
+                closeConfirmModal(true);
+            };
+        }
+
+        function closeConfirmModal(didConfirm) {
+            const modal = document.getElementById('confirmModal');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            modal.querySelector('div').classList.remove('scale-100');
+            modal.querySelector('div').classList.add('scale-95');
+
+            if (didConfirm && confirmCallback) {
+                confirmCallback();
+            }
+            confirmCallback = null;
+        }
+
+        // Core Renderer: Form and Interactive Fields
+        function renderForm() {
+            const container = document.getElementById('dynamicSectionsContainer');
+            container.innerHTML = '';
+
+            surveyStructure.forEach((section, sIndex) => {
+                const sectionEl = document.createElement('section');
+                sectionEl.className = "bg-white border border-slate-200 rounded-2xl p-6 shadow-sm transition-all";
+                sectionEl.id = section.id;
+
+                // Section title and delete button (if admin)
+                let headerHtml = `
+                    <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="text-purple-500 text-lg"><i class="fa-solid fa-circle-dot"></i></span>
+                            <h2 class="text-lg font-bold text-slate-900" 
+                                id="title_${section.id}" 
+                                contenteditable="${isAdmin}" 
+                                onblur="updateSectionTitle('${section.id}', this.innerText)"
+                            >${section.title}</h2>
+                        </div>
+                        ${isAdmin ? `
+                            <button type="button" onclick="triggerDeleteSection('${section.id}')" class="text-rose-500 hover:text-rose-700 text-xs font-semibold p-1">
+                                <i class="fa-solid fa-trash-can mr-1"></i> 刪除此區塊
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+
+                // Section context/scenario (Editable)
+                let scenarioHtml = `
+                    <div class="bg-slate-50 text-xs text-slate-600 p-3.5 rounded-lg mb-6 leading-relaxed relative">
+                        <strong>課堂情境回顧：</strong>
+                        <div id="scen_${section.id}" 
+                             class="mt-1 outline-none focus:bg-white" 
+                             contenteditable="${isAdmin}" 
+                             onblur="updateSectionScenario('${section.id}', this.innerText)"
+                        >${section.scenario}</div>
+                        ${isAdmin ? `<span class="absolute right-2 bottom-1 text-[9px] text-purple-400 select-none"><i class="fa-solid fa-pen-to-square"></i> 可直接修改情境</span>` : ''}
+                    </div>
+                `;
+
+                // Questions Loop
+                let questionsHtml = `<div class="space-y-6">`;
+                section.questions.forEach((q, qIndex) => {
+                    questionsHtml += `
+                        <div class="space-y-3 relative group">
+                            <div class="flex justify-between items-start gap-2">
+                                <label class="block text-sm font-medium text-slate-800 leading-relaxed flex-grow">
+                                    <span id="text_${q.id}" 
+                                          contenteditable="${isAdmin}" 
+                                          onblur="updateQuestionText('${section.id}', '${q.id}', this.innerText)"
+                                          class="outline-none focus:bg-slate-50 p-0.5 rounded"
+                                    >${q.text}</span>
+                                </label>
+                                ${isAdmin ? `
+                                    <button type="button" onclick="triggerDeleteQuestion('${section.id}', '${q.id}')" class="text-rose-400 hover:text-rose-600 text-xs p-1">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                    `;
+
+                    // Likert options or Text area input
+                    if (q.type === 'likert') {
+                        questionsHtml += `
+                            <div class="space-y-1">
+                                <div class="flex items-center justify-between gap-1 pt-1.5 pb-1">
+                                    <span class="text-[10px] sm:text-xs text-slate-400 font-medium select-none">非常不同意</span>
+                                    <div class="flex items-center space-x-1 sm:space-x-3">
+                        `;
+
+                        [1, 2, 3, 4, 5].forEach(val => {
+                            const radioId = `${q.id}_val_${val}`;
+                            questionsHtml += `
+                                <label for="${radioId}" class="cursor-pointer relative">
+                                    <input 
+                                        type="radio" 
+                                        id="${radioId}" 
+                                        name="${q.id}" 
+                                        value="${val}" 
+                                        required
+                                        class="sr-only peer"
+                                    />
+                                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-slate-200 bg-white hover:bg-slate-50 peer-checked:bg-purple-100 peer-checked:border-purple-400 peer-checked:text-purple-700 flex items-center justify-center text-xs sm:text-sm font-semibold text-slate-500 transition-all">
+                                        ${val}
+                                    </div>
+                                </label>
+                            `;
+                        });
+
+                        questionsHtml += `
+                                    </div>
+                                    <span class="text-[10px] sm:text-xs text-slate-400 font-medium select-none">非常同意</span>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // Text Area
+                        questionsHtml += `
+                            <textarea 
+                                name="${q.id}" 
+                                rows="3" 
+                                placeholder="請輸入您的看法..." 
+                                class="w-full bg-white border border-slate-200 rounded-lg p-3 text-sm text-slate-800 placeholder-slate-400 focus-lavender transition-all"
+                            ></textarea>
+                        `;
+                    }
+
+                    questionsHtml += `</div>`;
+                });
+                questionsHtml += `</div>`;
+
+                sectionEl.innerHTML = headerHtml + scenarioHtml + questionsHtml;
+                container.appendChild(sectionEl);
+            });
+        }
+
+        // Live stats processing engine
+        function renderStatistics() {
+            document.getElementById('respondentCount').innerText = statistics.count;
+            const container = document.getElementById('statsBarsContainer');
+            container.innerHTML = '';
+
+            const wall = document.getElementById('feedbackWall');
+            wall.innerHTML = '';
+
+            // Calculate live totals for all currently active questions
+            let quantitativeStats = {};
+            let qualitativeResponses = [];
+
+            // Initialize dynamic accumulators for active structure
+            surveyStructure.forEach(sec => {
+                sec.questions.forEach(q => {
+                    if (q.type === 'likert') {
+                        quantitativeStats[q.id] = {
+                            sum: 0,
+                            count: 0,
+                            text: q.text
+                        };
+                    } else {
+                        qualitativeResponses.push({
+                            id: q.id,
+                            label: q.text.substring(0, 15) + "...",
+                            feedbacks: []
+                        });
+                    }
+                });
+            });
+
+            // Iterate over all actual mock & live answers
+            statistics.answers.forEach(ans => {
+                // Quantitative summation
+                for (let qKey in quantitativeStats) {
+                    if (ans[qKey] !== undefined && ans[qKey] !== null) {
+                        quantitativeStats[qKey].sum += Number(ans[qKey]);
+                        quantitativeStats[qKey].count += 1;
+                    }
+                }
+                // Qualitative aggregation
+                qualitativeResponses.forEach(item => {
+                    const textVal = ans[item.id];
+                    if (textVal && textVal.trim() !== '') {
+                        item.feedbacks.push(textVal);
+                    }
+                });
+            });
+
+            // Render Progress Bars for Likert scales
+            let hasQuantData = false;
+            for (let qKey in quantitativeStats) {
+                hasQuantData = true;
+                const stat = quantitativeStats[qKey];
+                const avg = stat.count > 0 ? (stat.sum / stat.count).toFixed(1) : "0.0";
+                const pct = stat.count > 0 ? ((stat.sum / stat.count) / 5) * 100 : 0;
+
+                const barGroup = document.createElement('div');
+                barGroup.className = "space-y-1.5";
+                barGroup.innerHTML = `
+                    <div class="flex justify-between text-xs font-medium text-slate-700">
+                        <span class="truncate pr-4">${stat.text}</span>
+                        <span class="font-bold text-purple-600 shrink-0">${avg} / 5.0</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div class="bg-purple-500 h-full rounded-full transition-all duration-1000" style="width: ${pct}%;"></div>
+                    </div>
+                `;
+                container.appendChild(barGroup);
+            }
+
+            if (!hasQuantData) {
+                container.innerHTML = `<p class="text-xs text-slate-400">目前沒有可統計的量化題目。</p>`;
+            }
+
+            // Render Text Walls
+            let hasQualData = false;
+            qualitativeResponses.forEach(item => {
+                item.feedbacks.forEach(fbText => {
+                    hasQualData = true;
+                    const card = document.createElement('div');
+                    card.className = "bg-slate-50 p-3 rounded-lg border border-slate-100";
+                    card.innerHTML = `
+                        <p class="text-xs text-purple-700 font-semibold mb-1">${item.label}</p>
+                        <p class="text-xs text-slate-600 leading-relaxed">${escapeHtml(fbText)}</p>
+                    `;
+                    wall.appendChild(card);
+                });
+            });
+
+            if (!hasQualData) {
+                wall.innerHTML = `<p class="text-xs text-slate-400">目前尚無開放意見填答。</p>`;
+            }
+        }
+
+        // Action: Load Mock Database
+        function loadMockData() {
+            statistics.count = initialMockAnswers.length;
+            statistics.answers = JSON.parse(JSON.stringify(initialMockAnswers));
+            renderStatistics();
+            showToast("成功載入 12 筆大成模擬數據！後台圖表與意見牆已同步。");
+        }
+
+        // Action: Trigger Clear Database
+        function triggerClearData() {
+            openConfirmModal(
+                "確認要重設問卷數據嗎？",
+                "重設後將清空目前所有學生的填答分數與回饋紀錄，本動作無法回復。",
+                function() {
+                    statistics.count = 0;
+                    statistics.answers = [];
+                    renderStatistics();
+                    showToast("所有填答數據已成功歸零重設。");
+                }
+            );
+        }
+
+        // CRUD: Update Section details
+        function updateSectionTitle(id, newTitle) {
+            const sec = surveyStructure.find(s => s.id === id);
+            if(sec) sec.title = newTitle;
+        }
+
+        function updateSectionScenario(id, newScenario) {
+            const sec = surveyStructure.find(s => s.id === id);
+            if(sec) sec.scenario = newScenario;
+        }
+
+        function updateQuestionText(secId, qId, newText) {
+            const sec = surveyStructure.find(s => s.id === secId);
+            if (sec) {
+                const q = sec.questions.find(item => item.id === qId);
+                if (q) q.text = newText;
+            }
+        }
+
+        // CRUD: Delete operations via custom Confirm modal
+        function triggerDeleteSection(secId) {
+            openConfirmModal(
+                "確認要刪除此整個區塊嗎？",
+                "這會連同此區塊內包含的所有李克特量表題目與開放性意見題一併移除。",
+                function() {
+                    surveyStructure = surveyStructure.filter(s => s.id !== secId);
+                    renderForm();
+                    renderStatistics();
+                    showToast("區塊已成功移除。");
+                }
+            );
+        }
+
+        // Trigger Delete Question
+        function triggerDeleteQuestion(secId, qId) {
+            openConfirmModal(
+                "確認要刪除此道問題？",
+                "此題目將不再呈現給學生填寫，後台對應統計也將同步取消。",
+                function() {
+                    const sec = surveyStructure.find(s => s.id === secId);
+                    if (sec) {
+                        sec.questions = sec.questions.filter(q => q.id !== qId);
+                        renderForm();
+                        renderStatistics();
+                        showToast("題目已成功移除。");
+                    }
+                }
+            );
+        }
+
+        // CRUD: Create operation via secure prompts
+        function addNewQuestionPrompt() {
+            const type = prompt("請選擇題目類型：\n輸入 '1' 代表李克特五點量表單選題\n輸入 '2' 代表多行開放意見文字題");
+            if (type !== '1' && type !== '2') {
+                if (type !== null) showToast("無效的類型選擇，請輸入 1 或 2。", true);
+                return;
+            }
+
+            const text = prompt("請輸入您的新題目問題描述：", "新題目描述");
+            if (!text || text.trim() === "") return;
+
+            // Choose section list
+            let secOptionsStr = "請選擇此題要加入的區塊（輸入數字）：\n";
+            surveyStructure.forEach((s, idx) => {
+                secOptionsStr += `${idx + 1}. ${s.title}\n`;
+            });
+            secOptionsStr += `${surveyStructure.length + 1}. [建立全新部分/區塊]`;
+
+            const secChoice = prompt(secOptionsStr);
+            const parsedChoice = parseInt(secChoice);
+
+            const qId = "custom_q_" + Date.now();
+            const qObj = {
+                id: qId,
+                type: type === '1' ? 'likert' : 'text',
+                text: text
+            };
+
+            if (parsedChoice > 0 && parsedChoice <= surveyStructure.length) {
+                surveyStructure[parsedChoice - 1].questions.push(qObj);
+                showToast("成功將新問題新增至現有區塊。");
+            } else if (parsedChoice === surveyStructure.length + 1) {
+                const newSecTitle = prompt("請輸入全新區塊的名稱：", "第五部分：新增實踐評估");
+                if(!newSecTitle) return;
+                const newSecId = "custom_sec_" + Date.now();
+                surveyStructure.push({
+                    id: newSecId,
+                    title: newSecTitle,
+                    scenario: "此部分為全新建立的評估情境描述。",
+                    questions: [qObj]
+                });
+                showToast("已成功建立新區塊並加入問題。");
+            } else {
+                showToast("取消操作或輸入了無效的區塊代號。", true);
+                return;
+            }
+
+            renderForm();
+            renderStatistics();
+        }
+
+        // Form Submit Handler
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            const data = new FormData(form);
+            const singleAnswerObj = {};
+
+            // Dynamically collect answers according to current questionnaire structure
+            let isValid = true;
+            surveyStructure.forEach(sec => {
+                sec.questions.forEach(q => {
+                    const ansVal = data.get(q.id);
+                    if (q.type === 'likert' && !ansVal) {
+                        isValid = false;
+                    }
+                    singleAnswerObj[q.id] = ansVal;
+                });
+            });
+
+            if (!isValid) {
+                showToast("尚未填寫完成！請點選完所有評估題目再行提交。", true);
+                return;
+            }
+
+            // Save to Local memory state
+            statistics.count += 1;
+            statistics.answers.push(singleAnswerObj);
+
+            // Re-draw stats
+            renderStatistics();
+
+            // Open Modal
+            form.reset();
+            renderForm(); // redraw to reset custom radio selected UI states cleanly
+
+            const modal = document.getElementById('successModal');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modal.querySelector('div').classList.remove('scale-95');
+            modal.querySelector('div').classList.add('scale-100');
+        }
+
+        // Close Modal Helper
+        function closeModal() {
+            const modal = document.getElementById('successModal');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            modal.querySelector('div').classList.remove('scale-100');
+            modal.querySelector('div').classList.add('scale-95');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Administrative lock functions
+        function showAdminPasswordPrompt() {
+            const container = document.getElementById('passwordFieldContainer');
+            if (container.classList.contains('hidden')) {
+                container.classList.remove('hidden');
+                document.getElementById('adminPasswordInput').focus();
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        function verifyPassword() {
+            const input = document.getElementById('adminPasswordInput');
+            const dashboard = document.getElementById('adminDashboard');
+            const gateBtn = document.getElementById('adminGateBtn');
+            const container = document.getElementById('passwordFieldContainer');
+            const errorMsg = document.getElementById('passwordErrorMsg');
+
+            if (input.value === ADMIN_PASSWORD) {
+                isAdmin = true;
+                errorMsg.classList.add('hidden');
+                
+                // Show badge & tools
+                document.getElementById('adminBadge').classList.remove('hidden');
+                document.getElementById('editHeaderTip').classList.remove('hidden');
+                document.getElementById('editHeartMsgTip').classList.remove('hidden');
+                
+                // Make Header editable
+                document.getElementById('surveyTitle').setAttribute('contenteditable', 'true');
+                document.getElementById('surveySubtitle').setAttribute('contenteditable', 'true');
+                document.getElementById('heartMsgTitle').setAttribute('contenteditable', 'true');
+                document.getElementById('heartMsgContent').setAttribute('contenteditable', 'true');
+
+                // Unlock dashboard and panels
+                dashboard.classList.remove('hidden');
+                container.classList.add('hidden');
+                gateBtn.classList.add('hidden');
+                input.value = "";
+                
+                // Redraw structure to make section headers editable
+                renderForm();
+                renderStatistics();
+                
+                showToast("解鎖成功！您現在可以動態編輯所有題目。");
+                
+                setTimeout(() => {
+                    dashboard.scrollIntoView({ behavior: 'smooth' });
+                }, 150);
+            } else {
+                errorMsg.classList.remove('hidden');
+                input.value = "";
+                input.focus();
+            }
+        }
+
+        // Lock Admin Mode Helper
+        function lockAdminMode() {
+            isAdmin = false;
+            
+            // Hide administrative badges
+            document.getElementById('adminBadge').classList.add('hidden');
+            document.getElementById('editHeaderTip').classList.add('hidden');
+            document.getElementById('editHeartMsgTip').classList.add('hidden');
+
+            // Save textual header states
+            document.getElementById('surveyTitle').setAttribute('contenteditable', 'false');
+            document.getElementById('surveySubtitle').setAttribute('contenteditable', 'false');
+            document.getElementById('heartMsgTitle').setAttribute('contenteditable', 'false');
+            document.getElementById('heartMsgContent').setAttribute('contenteditable', 'false');
+
+            // Hide main admin stats dashboard
+            document.getElementById('adminDashboard').classList.add('hidden');
+            document.getElementById('adminGateBtn').classList.remove('hidden');
+
+            renderForm(); // locked-view render
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            showToast("管理員編輯與數據檢視功能已安全鎖定。");
+        }
+
+        // Helper to escape html safely
+        function escapeHtml(str) {
+            if(!str) return "";
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Bootstrap Core
+        window.addEventListener('DOMContentLoaded', () => {
+            renderForm();
+            renderStatistics();
+        });
+    </script>
+</body>
+</html>
+
+```
