@@ -66,7 +66,7 @@
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-purple-600"></span>
                 </span>
-                <span class="text-sm font-bold"><i class="fa-solid fa-user-gear mr-1"></i> 編輯管理員模式已啟用</span>
+                <span class="text-sm font-bold"><i class="fa-solid fa-user-gear mr-1"></i> 管理員模式已儲存</span>
             </div>
             <div class="flex flex-wrap gap-2">
                 <button type="button" onclick="addNewQuestionPrompt()" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
@@ -78,6 +78,10 @@
                 <button type="button" onclick="triggerClearData()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
                     <i class="fa-solid fa-trash-can mr-1"></i> 重設數據
                 </button>
+                <!-- NEW: Export updated code button for GitHub permanence -->
+                <button type="button" onclick="exportUpdatedHTML()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
+                    <i class="fa-solid fa-file-export mr-1"></i> 儲存並導出 HTML
+                </button>
                 <button type="button" onclick="lockAdminMode()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
                     <i class="fa-solid fa-lock mr-1"></i> 鎖定並儲存
                 </button>
@@ -86,10 +90,10 @@
 
         <!-- Header Section -->
         <header class="text-center mb-10 mt-4">
-            <h1 id="surveyTitle" class="text-3xl font-extrabold text-slate-900 tracking-tight" contenteditable="false">
+            <h1 id="surveyTitle" class="text-3xl font-extrabold text-slate-900 tracking-tight" contenteditable="false" onblur="saveHeaderContent()">
                 韓舞社社課學習回饋表單
             </h1>
-            <p id="surveySubtitle" class="text-slate-500 mt-3 text-sm md:text-base leading-relaxed max-w-lg mx-auto" contenteditable="false">
+            <p id="surveySubtitle" class="text-slate-500 mt-3 text-sm md:text-base leading-relaxed max-w-lg mx-auto" contenteditable="false" onblur="saveHeaderContent()">
                 親愛的小孩們，謝謝你們每次社課都這麼配合！這是一份結合新教學嘗試的回饋表單，你們的真實感受對我非常重要，請幫我花 3 分鐘填寫唷 ❤️
             </p>
             <div id="editHeaderTip" class="hidden text-xs text-purple-500 mt-1.5"><i class="fa-solid fa-pen-to-square mr-1"></i> 點選上述標題與副標題可直接修改</div>
@@ -105,9 +109,9 @@
             <!-- Heartwarming Message Board -->
             <section class="bg-lavender-light border border-lavender-subtle rounded-2xl p-6 shadow-sm">
                 <h3 class="text-base font-bold text-purple-900 mb-2 flex items-center gap-1.5">
-                    <span>💌</span> <span id="heartMsgTitle" contenteditable="false">來自教學的心裡話</span>
+                    <span>💌</span> <span id="heartMsgTitle" contenteditable="false" onblur="saveHeaderContent()">來自教學的心裡話</span>
                 </h3>
-                <div id="heartMsgContent" class="text-purple-850 text-xs md:text-sm space-y-3 leading-relaxed whitespace-pre-wrap" contenteditable="false">謝謝寶貝們每次社課都這麼挺我、這麼配合！特別是願意花時間幫我填寫這份表單（大心）❤️。
+                <div id="heartMsgContent" class="text-purple-850 text-xs md:text-sm space-y-3 leading-relaxed whitespace-pre-wrap" contenteditable="false" onblur="saveHeaderContent()">謝謝寶貝們每次社課都這麼挺我、這麼配合！特別是願意花時間幫我填寫這份表單（大心）❤️。
 
 這次教學是我第一次嘗試將「傳統街舞的基底」融入 K-pop 教學中，希望除了排舞，也能帶給你們帶得走的舞蹈觀念，讓大家未來跳舞都能派上用場！希望這個新嘗試沒有讓你們大腦過載大爆炸👀。
 
@@ -236,14 +240,14 @@
         let isAdmin = false;
         let confirmCallback = null;
 
-        // Structured initial State representing the physical survey structure
-        let surveyStructure = [
+        // Structured default survey structure (used if no localstorage exists)
+        const defaultSurveyStructure = [
             {
                 id: "sec_1",
                 title: "第一部分：暖身環節",
                 scenario: "教學邀請第一排社員隨機挑選一首 K-pop 歌曲進行暖身，並在過程中詳細說明暖身動作的標準、功能與拍子分配（例如：演示轉頭時如何將 8 拍平均分配）。",
                 questions: [
-                    { id: "p1_q1", type: "likert", text: "課堂中「利用音樂數拍並拆解拍子（如 8 拍平均分配）」的講解，有助於我更具體地掌握動作的節奏感。" },
+                    { id: "p1_q1", type: "likert", text: "課堂中「利用音樂數拍並拆解拍子（如 8 拍 average 分配）」的講解，有助於我更具體地掌握動作的節奏感。" },
                     { id: "p1_q2", type: "likert", text: "暖身環節中對動作標準與功能的說明，提升了我對「暖身能預防運動傷害與啟動肌肉」的認知。" },
                     { id: "p1_q3", type: "text", text: "【開放意見】在暖身環節中，有沒有哪個瞬間或教學方式讓你印象最深刻？或是有什麼調整建議？" }
                 ]
@@ -278,13 +282,11 @@
             }
         ];
 
-        // Active State of Answers Database (In-Memory)
-        let statistics = {
-            count: 0,
-            answers: [] // Array of submitted form objects
-        };
+        // Active State containers loaded from LocalStorage if available
+        let surveyStructure = [];
+        let statistics = { count: 0, answers: [] };
 
-        // Preset 12 mock rows for instant dashboard render
+        // Preset 12 mock rows for statistics demo
         const initialMockAnswers = [
             { p1_q1: 5, p1_q2: 5, p1_q3: "老師轉脖子的拍子說明好詳細，第一次跟得上！", p2_q1: 4, p2_q2: 5, p2_q3: "馬步蹲對排舞發力真的有幫助", p3_q1: 4, p4_q1: 5, p4_q2: 4, p4_q3: "排舞能連起來很有成就感" },
             { p1_q1: 4, p1_q2: 5, p1_q3: "", p2_q1: 5, p2_q2: 4, p2_q3: "銜接的很讚！", p3_q1: 5, p4_q1: 5, p4_q2: 4, p4_q3: "走位不再怕找不到方向了" },
@@ -299,6 +301,58 @@
             { p1_q1: 4, p1_q2: 5, p1_q3: "暖身詳細度很夠", p2_q1: 4, p2_q2: 4, p2_q3: "", p3_q1: 4, p4_q1: 4, p4_q2: 4, p4_q3: "" },
             { p1_q1: 5, p1_q2: 5, p1_q3: "", p2_q1: 5, p2_q2: 5, p2_q3: "給編號直接拯救我的隊形定位", p3_q1: 5, p4_q1: 5, p4_q2: 4, p4_q3: "今天強度剛剛好" }
         ];
+
+        const likertLabels = [
+            { val: 1, text: '1' },
+            { val: 2, text: '2' },
+            { val: 3, text: '3' },
+            { val: 4, text: '4' },
+            { val: 5, text: '5' }
+        ];
+
+        // NEW: Load everything from LocalStorage
+        function loadFromLocalStorage() {
+            // Load structure
+            const savedStructure = localStorage.getItem('dance_survey_structure');
+            if (savedStructure) {
+                surveyStructure = JSON.parse(savedStructure);
+            } else {
+                surveyStructure = JSON.parse(JSON.stringify(defaultSurveyStructure));
+            }
+
+            // Load data
+            const savedStats = localStorage.getItem('dance_survey_statistics');
+            if (savedStats) {
+                statistics = JSON.parse(savedStats);
+            } else {
+                statistics = { count: 0, answers: [] };
+            }
+
+            // Load Custom Headers
+            const savedTitle = localStorage.getItem('dance_survey_title');
+            if (savedTitle) document.getElementById('surveyTitle').innerText = savedTitle;
+            const savedSub = localStorage.getItem('dance_survey_subtitle');
+            if (savedSub) document.getElementById('surveySubtitle').innerText = savedSub;
+            const savedHeartTitle = localStorage.getItem('dance_survey_heart_title');
+            if (savedHeartTitle) document.getElementById('heartMsgTitle').innerText = savedHeartTitle;
+            const savedHeartContent = localStorage.getItem('dance_survey_heart_content');
+            if (savedHeartContent) document.getElementById('heartMsgContent').innerText = savedHeartContent;
+        }
+
+        // NEW: Save current state to LocalStorage
+        function saveToLocalStorage() {
+            localStorage.setItem('dance_survey_structure', JSON.stringify(surveyStructure));
+            localStorage.setItem('dance_survey_statistics', JSON.stringify(statistics));
+            saveHeaderContent();
+        }
+
+        // Save Custom editable Headers
+        function saveHeaderContent() {
+            localStorage.setItem('dance_survey_title', document.getElementById('surveyTitle').innerText);
+            localStorage.setItem('dance_survey_subtitle', document.getElementById('surveySubtitle').innerText);
+            localStorage.setItem('dance_survey_heart_title', document.getElementById('heartMsgTitle').innerText);
+            localStorage.setItem('dance_survey_heart_content', document.getElementById('heartMsgContent').innerText);
+        }
 
         // Toast Helper (Replaces traditional Alert)
         function showToast(msg, isError = false) {
@@ -567,12 +621,13 @@
             }
         }
 
-        // Action: Load Mock Database
+        // Action: Load Mock Data
         function loadMockData() {
             statistics.count = initialMockAnswers.length;
             statistics.answers = JSON.parse(JSON.stringify(initialMockAnswers));
+            saveToLocalStorage(); // NEW: Save to LocalStorage immediately
             renderStatistics();
-            showToast("成功載入 12 筆大成模擬數據！後台圖表與意見牆已同步。");
+            showToast("成功載入 12 筆大成模擬數據！已自動儲存至瀏覽器暫存。");
         }
 
         // Action: Trigger Clear Database
@@ -583,6 +638,7 @@
                 function() {
                     statistics.count = 0;
                     statistics.answers = [];
+                    saveToLocalStorage(); // NEW: Save empty state to LocalStorage
                     renderStatistics();
                     showToast("所有填答數據已成功歸零重設。");
                 }
@@ -593,11 +649,13 @@
         function updateSectionTitle(id, newTitle) {
             const sec = surveyStructure.find(s => s.id === id);
             if(sec) sec.title = newTitle;
+            saveToLocalStorage(); // NEW: Save changes to LocalStorage
         }
 
         function updateSectionScenario(id, newScenario) {
             const sec = surveyStructure.find(s => s.id === id);
             if(sec) sec.scenario = newScenario;
+            saveToLocalStorage(); // NEW: Save changes to LocalStorage
         }
 
         function updateQuestionText(secId, qId, newText) {
@@ -606,6 +664,7 @@
                 const q = sec.questions.find(item => item.id === qId);
                 if (q) q.text = newText;
             }
+            saveToLocalStorage(); // NEW: Save changes to LocalStorage
         }
 
         // CRUD: Delete operations via custom Confirm modal
@@ -617,12 +676,12 @@
                     surveyStructure = surveyStructure.filter(s => s.id !== secId);
                     renderForm();
                     renderStatistics();
+                    saveToLocalStorage(); // NEW: Save changes to LocalStorage
                     showToast("區塊已成功移除。");
                 }
             );
         }
 
-        // Trigger Delete Question
         function triggerDeleteQuestion(secId, qId) {
             openConfirmModal(
                 "確認要刪除此道問題？",
@@ -633,6 +692,7 @@
                         sec.questions = sec.questions.filter(q => q.id !== qId);
                         renderForm();
                         renderStatistics();
+                        saveToLocalStorage(); // NEW: Save changes to LocalStorage
                         showToast("題目已成功移除。");
                     }
                 }
@@ -688,6 +748,7 @@
 
             renderForm();
             renderStatistics();
+            saveToLocalStorage(); // NEW: Save changes to LocalStorage
         }
 
         // Form Submit Handler
@@ -719,6 +780,7 @@
             statistics.answers.push(singleAnswerObj);
 
             // Re-draw stats
+            saveToLocalStorage(); // NEW: Save answers to LocalStorage immediately
             renderStatistics();
 
             // Open Modal
@@ -731,7 +793,6 @@
             modal.querySelector('div').classList.add('scale-100');
         }
 
-        // Close Modal Helper
         function closeModal() {
             const modal = document.getElementById('successModal');
             modal.classList.add('opacity-0', 'pointer-events-none');
@@ -796,7 +857,6 @@
             }
         }
 
-        // Lock Admin Mode Helper
         function lockAdminMode() {
             isAdmin = false;
             
@@ -816,8 +876,40 @@
             document.getElementById('adminGateBtn').classList.remove('hidden');
 
             renderForm(); // locked-view render
+            saveToLocalStorage(); // NEW: Save current layout to LocalStorage
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            showToast("管理員編輯與數據檢視功能已安全鎖定。");
+            showToast("管理員編輯與數據檢視功能已安全鎖定並儲存。");
+        }
+
+        // NEW: Advanced Export feature - Re-creates index.html with the modified structure built-in so that it's permanent for everyone on GitHub!
+        function exportUpdatedHTML() {
+            saveToLocalStorage(); // Make sure everything is saved first
+
+            // Fetch the current page HTML text
+            let currentHTML = document.documentElement.outerHTML;
+
+            // Locate and dynamically replace the hardcoded "defaultSurveyStructure" inside the JavaScript source to reflect the edited changes permanantly!
+            const defaultStructureRegex = /const defaultSurveyStructure = \[\s*\{[\s\S]*?\}\s*\];/;
+            const updatedStructureJS = `const defaultSurveyStructure = ${JSON.stringify(surveyStructure, null, 4)};`;
+            
+            // Apply replacement inside code
+            currentHTML = currentHTML.replace(defaultStructureRegex, updatedStructureJS);
+
+            // Clean up admin active classes from exported DOM so it loads safely for users
+            currentHTML = currentHTML.replace(/class="([^"]*?)hidden([^"]*?)"/g, 'class="$1hidden$2"');
+            
+            // Create a file blob and trigger a smooth download
+            const blob = new Blob([currentHTML], { type: 'text/html;charset=utf-8' });
+            const tempLink = document.createElement('a');
+            tempLink.href = URL.createObjectURL(blob);
+            tempLink.download = 'index.html';
+            
+            // Append and click
+            document.body.appendChild(tempLink);
+            tempLink.click();
+            document.body.removeChild(tempLink);
+
+            showToast("最新的 index.html 已下載！請上傳覆蓋 GitHub 的舊檔案以套用全球更新。");
         }
 
         // Helper to escape html safely
@@ -833,6 +925,7 @@
 
         // Bootstrap Core
         window.addEventListener('DOMContentLoaded', () => {
+            loadFromLocalStorage(); // NEW: Priority load state from LocalStorage
             renderForm();
             renderStatistics();
         });
