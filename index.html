@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>韓舞社社課學習回饋與研究管理系統</title>
+    <title>社課學習回饋系統</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -94,7 +94,7 @@
                 WLKD社課學習回饋表單
             </h1>
             <p id="surveySubtitle" class="text-slate-500 mt-3 text-sm md:text-base leading-relaxed max-w-lg mx-auto" contenteditable="false" onblur="saveHeaderContent()">
-                謝謝小孩們每次社課都這麼配合！這是一份結合新教學嘗試的回饋表單，你們的真實感受對我非常重要，請幫我花 3 分鐘填寫唷 ❤️
+                謝謝小孩們每次社課都這麼配合！這份表單除了是針對這學期社課的回饋表單，也是會用在我的多元學習成果的資料～全部的回覆都會是匿名的哦！希望大家填寫最真實感受🙂‍↕️謝謝你們！！
             </p>
             <div id="editHeaderTip" class="hidden text-xs text-purple-500 mt-1.5"><i class="fa-solid fa-pen-to-square mr-1"></i> 點選上述標題與副標題可直接修改</div>
         </header>
@@ -109,13 +109,13 @@
             <!-- Heartwarming Message Board -->
             <section class="bg-lavender-light border border-lavender-subtle rounded-2xl p-6 shadow-sm">
                 <h3 class="text-base font-bold text-purple-900 mb-2 flex items-center gap-1.5">
-                    <span>💌</span> <span id="heartMsgTitle" contenteditable="false" onblur="saveHeaderContent()">來自教學的心裡話</span>
+                    <span>💌</span> <span id="heartMsgTitle" contenteditable="false" onblur="saveHeaderContent()">女午覺碎碎唸</span>
                 </h3>
                 <div id="heartMsgContent" class="text-purple-850 text-xs md:text-sm space-y-3 leading-relaxed whitespace-pre-wrap" contenteditable="false" onblur="saveHeaderContent()">謝謝寶貝們每次社課都這麼挺我、這麼配合！特別是願意花時間幫我填寫這份表單（大心）❤️。
 
-這次教學是我第一次嘗試將「傳統街舞的基底」融入 K-pop 教學中，希望除了排舞，也能帶給你們帶得走的舞蹈觀念，讓大家未來跳舞都能派上用場！希望這個新嘗試沒有讓你們大腦過載大爆炸👀。
+這次社課教學是我第一次嘗試將街舞的教學方式融入K-pop性質的大合舞教學中，希望能帶給你們未來也能派上用場的技巧👀希望這個新嘗試沒有讓你們覺得太過負擔😖
 
-跳舞是一件讓人最純粹、最開心的事情，大成大合舞我們一起加油，愛大家耶耶耶！</div>
+跳舞是一件讓人很開心的事情啊啊，大成大合舞一起加油吧吧吧，愛大家😘！</div>
                 <div id="editHeartMsgTip" class="hidden text-xs text-purple-400 mt-2"><i class="fa-solid fa-pen-to-square mr-1"></i> 點選文字框可直接編輯心裡話</div>
             </section>
 
@@ -126,7 +126,7 @@
                     id="submitBtn"
                     class="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-semibold px-10 py-3.5 rounded-xl shadow-sm hover:shadow transition-all duration-150 cursor-pointer text-sm"
                 >
-                    提交學習回饋表單 ✨
+                    提交表單 ✨
                 </button>
             </div>
         </form>
@@ -144,7 +144,7 @@
             
             <!-- Password Verification Container (Hints removed for absolute secrecy) -->
             <div id="passwordFieldContainer" class="hidden mt-3 max-w-xs mx-auto p-4 bg-white border border-slate-200 rounded-xl shadow-sm">
-                <label class="block text-xs font-semibold text-slate-500 mb-2">輸入研究者專屬查看密碼：</label>
+                <label class="block text-xs font-semibold text-slate-500 mb-2">輸入密碼：</label>
                 <div class="flex gap-2">
                     <input 
                         type="password" 
@@ -245,39 +245,39 @@
             {
                 id: "sec_1",
                 title: "第一部分：暖身環節",
-                scenario: "教學邀請第一排社員隨機挑選一首 K-pop 歌曲進行暖身，並在過程中詳細說明暖身動作的標準、功能與拍子分配（例如：演示轉頭時如何將 8 拍平均分配）。",
+                scenario: "教學請第一排社員隨機挑選一首K-pop歌曲暖身，在過程中說明暖身動作的標準、功能與相應的拍子分配（例如：演示轉頭時如何將 8 拍平均分配）。",
                 questions: [
-                    { id: "p1_q1", type: "likert", text: "課堂中「利用音樂數拍並拆解拍子（如 8 拍 average 分配）」的講解，有助於我更具體地掌握動作的節奏感。" },
-                    { id: "p1_q2", type: "likert", text: "暖身環節中對動作標準與功能的說明，提升了我對「暖身能預防運動傷害與啟動肌肉」的認知。" },
-                    { id: "p1_q3", type: "text", text: "【開放意見】在暖身環節中，有沒有哪個瞬間或教學方式讓你印象最深刻？或是有什麼調整建議？" }
+                    { id: "p1_q1", type: "likert", text: "利用音樂數拍+拆解拍子（如8拍如何分配）」的講解，有助於我更了解如何讓動作對應音樂節拍。" },
+                    { id: "p1_q2", type: "likert", text: "暖身環節中對動作的說明，有提升我對各個暖身動作的功能的認知。" },
+                    { id: "p1_q3", type: "text", text: "【隨意填答👀】暖身環節教學方式有什麼調整建議？" }
                 ]
             },
             {
                 id: "sec_2",
                 title: "第二部分：舞蹈元素組合與大合舞教學",
-                scenario: "教學先講解了 4-5 組舞蹈基本元素（如：馬步蹲的轉胯幅度、重心置中等），搭配音樂演示數拍。隨後進入大合舞教學，拆解動作細節（發力方向、腳步踩點、軀幹朝向等），並融入了前面學到的基礎元素。",
+                scenario: "講解了 4-5 組舞蹈基本元素（如：馬步蹲的轉胯幅度、重心置中等），搭配音樂演示數拍。隨後進入大合舞教學，拆解動作細節（發力方向、腳步踩點、軀幹朝向等），並且運用、融入前面學到的基礎元素。",
                 questions: [
-                    { id: "p2_q1", type: "likert", text: "先學習「舞蹈基本元素組合（如馬步蹲轉胯）」，能有效幫助我在隨後的大合舞環節中更快上手、降低學習挫折感。" },
-                    { id: "p2_q2", type: "likert", text: "透過基礎元素的拆解，讓我理解到 K-pop 舞蹈是由許多不同的基本元素組合而成，有助於建立我的舞蹈觀念。" },
-                    { id: "p2_q3", type: "text", text: "【開放意見】關於「基礎元素 ➔ 實戰排舞」的銜接教學，你有什麼心得或想法嗎？" }
+                    { id: "p2_q1", type: "likert", text: "先學習舞蹈基本元素組合（如馬步蹲轉胯），有效幫助我在隨後的大合舞環節中更快上手💪🏻" },
+                    { id: "p2_q2", type: "likert", text: "透過拆解基礎元素有讓我理解「K-pop舞蹈是由許多不同的基本元素組合而成」的觀念。" },
+                    { id: "p2_q3", type: "text", text: "【隨意填答👀】關於銜接教學方式有什麼心得或建議嗎？" }
                 ]
             },
             {
                 id: "sec_3",
                 title: "第三部分：隊形走位與分組對拍",
-                scenario: "課堂中利用動態走位影片並分配每位社員編號；在需要分組對拍的部分將大家分為三排，以每排為一組教學各自的拍子（例如：第一排、第二排、第三排在不同的「嗚」聲做動作）。",
+                scenario: "利用動態走位影片並分配編號；在需要分組對拍的部分將大家分為三排，以每排為一組教學各自的拍子（例如：第一排、第二排、第三排在不同的「嗚」聲做動作）。",
                 questions: [
-                    { id: "p3_q1", type: "likert", text: "透過「動態走位影片分配編號」與「分排/分組針對特定拍子教學」，能讓我更清楚自己負責的段落，降低學習時的混亂感。" }
+                    { id: "p3_q1", type: "likert", text: "以動態走位影片分配編號與分排/分組針對特定段落教學，有能讓我更清楚自己負責的走位" }
                 ]
             },
             {
                 id: "sec_4",
-                title: "第四部分：實際學習感受",
-                scenario: "此部分用於宏觀評估，包含教學清晰度及難易度掌控。",
+                title: "第四部分：實際感受",
+                scenario: "不用非常細想沒有關係～這則詢問主要是針對宏觀的感受👀",
                 questions: [
-                    { id: "p4_q1", type: "likert", text: "教學在解釋動作細節（如發力方向、手腳位置）時，使用的說明方式 or 比喻是清晰且容易理解的。" },
-                    { id: "p4_q2", type: "likert", text: "本次社課的進度推移與動作強度，對我而言能保持在「有挑戰性但不會過度焦慮或吃力」的適中狀態。" },
-                    { id: "p4_q3", type: "text", text: "【開放意見】這次社課有沒有讓你覺得最挫折，或是最驚喜、很有成就感的地方？" }
+                    { id: "p4_q1", type: "likert", text: "在解釋動作細節（如發力方向、手腳位置）時，使用的說明方式 or 比喻是清晰且容易理解的。" },
+                    { id: "p4_q2", type: "likert", text: "社課的進度與動作強度，對我而言能保持在「有挑戰性但不會過度焦慮或吃力」的狀態。" },
+                    { id: "p4_q3", type: "text", text: "【隨意填答👀】其他對於社課的感受及意見！！" }
                 ]
             }
         ];
